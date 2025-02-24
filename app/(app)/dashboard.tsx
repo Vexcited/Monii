@@ -1,9 +1,110 @@
-import { Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import { useAccount } from "@/hooks/useAccount";
+import { getFutureOperationV1FutureCardOperations, getFutureOperationV1FutureTransfers } from "credit-agricole-mobile-api";
+import { Transaction } from "@/types/transaction";
+import { useMMKVObject } from "react-native-mmkv";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dashboard () {
+  const account = useAccount();
+
+  const [futureOperations, setFutureOperations] = useMMKVObject<Array<Transaction>>("future_operations");
+  const [futureTransfers, setFutureTransfers] = useMMKVObject<Array<Transaction>>("future_transfers");
+
+  const future = useMemo(() => [
+    ...(futureOperations ?? []),
+    ...(futureTransfers ?? [])
+  ], [futureOperations, futureTransfers]);
+
+  const futureBalance = useMemo(() => {
+    return future.reduce((acc, transaction) => acc + transaction.amount, account.balance ?? 0);
+  }, [account.balance, future])
+
+  useEffect(() => {
+    if (!account.id) return;
+
+    getFutureOperationV1FutureCardOperations(account.accessToken, account.id)
+      .then(({ operations, preauthorized_operations }) => {
+        const merged = [ ...operations, ...preauthorized_operations ];
+        const transactions: Array<Transaction> = merged.map(operation => ({
+          amount: operation.montant_en_euro.montant,
+          label: operation.libelle,
+          timestamp: operation.date_heure,
+          currency: operation.montant_en_euro.devise
+        }));
+
+        transactions.sort((a, b) => b.timestamp - a.timestamp);
+        setFutureOperations(transactions);
+      });
+
+    getFutureOperationV1FutureTransfers(account.accessToken, account.id)
+      .then(({ future_transfers }) => {
+        const transfers: Array<Transaction> = future_transfers.map(operation => ({
+          amount: operation.amount,
+          label: operation.additional_label,
+          timestamp: operation.date,
+          currency: "EUR"
+        }));
+
+        transfers.sort((a, b) => b.timestamp - a.timestamp);
+        setFutureTransfers(transfers);
+      });
+  }, [account.id, account.accessToken, setFutureOperations, setFutureTransfers]);
+
   return (
-    <View>
-      <Text>Dashboard</Text>
-    </View>
+    <SafeAreaView style={{
+      paddingTop: 0,
+      padding: 32,
+    }}>
+      <View style={{
+        gap: 4,
+        display: "flex",
+        padding: 24,
+        alignItems: "center",
+      }}>
+        <Text style={{
+          fontSize: 20,
+          fontWeight: "bold",
+        }}>{futureBalance.toFixed(2)} EUR</Text>
+        <Text style={{
+          opacity: 0.5,
+        }}>Currently at {(account.balance ?? 0).toFixed(2)} EUR</Text>
+      </View>
+
+      <View>
+        <Text>Known future operations and transfers</Text>
+        <ScrollView>
+          {future.map((transaction, index) => (
+            <View key={index}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                gap: 16
+              }}
+            >
+              <Text
+                style={{ flex: 1 }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {transaction.label}
+              </Text>
+
+              <Text style={{
+                flexShrink: 0,
+              }}>
+                {transaction.amount.toFixed(2)} {transaction.currency}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      <View>
+        <Text>Planned operations this month</Text>
+      </View>
+    </SafeAreaView>
   )
 }
