@@ -11,10 +11,13 @@ export default function AuthIndex() {
   }
 
   return (
-    <View>
-      <Text>Select a bank service for you</Text>
-
-      <Button title="Crédit Agricole" onPress={() => handleServiceLogin("credit-agricole")} />
+    <View style={{
+      paddingTop: 30
+    }}>
+      <Button
+        title="Crédit Agricole"
+        onPress={() => handleServiceLogin("credit-agricole")}
+      />
     </View>
   )
 }
