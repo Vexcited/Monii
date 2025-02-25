@@ -4,3 +4,7 @@ export type Transaction = {
   currency: string
   timestamp: number
 }
+
+export type RepeatedTransaction = Transaction & {
+  every: "month"
+}

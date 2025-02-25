@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo } from "react";
+import { Button, ScrollView, Text, View } from "react-native";
 import { useAccount } from "@/hooks/useAccount";
 import { getFutureOperationV1FutureCardOperations, getFutureOperationV1FutureTransfers } from "credit-agricole-mobile-api";
 import { Transaction } from "@/types/transaction";
 import { useMMKVObject } from "react-native-mmkv";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 export default function Dashboard () {
   const account = useAccount();
@@ -104,6 +105,7 @@ export default function Dashboard () {
 
       <View>
         <Text>Planned operations this month</Text>
+        <Button title="Add" onPress={() => router.push("/(app)/add")} />
       </View>
     </SafeAreaView>
   )
