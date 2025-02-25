@@ -1,4 +1,4 @@
-import { RepeatedTransaction, Transaction } from "@/types/transaction";
-import { atom } from "jotai";
+import type { Transaction } from "@/types/transaction";
+import { atomWithMMKV } from "@/utils/atomWithMMKV";
 
-export const plans = atom<Array<RepeatedTransaction | Transaction>>([]);
+export const Plans = atomWithMMKV<Array<Transaction>>("planned_operations", []);
