@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>myapp</string>
+          <string>monii</string>
           <string>com.vexcited.monii</string>
         </array>
       </dict>
